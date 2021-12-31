@@ -113,7 +113,7 @@ class AntecipaGovController extends Controller
                 return $this->antecipaGov->reponseSuccess('Proposta enviada com sucesso!', $proposal->toArray());
             }
 
-            return $this->antecipaGov->reponseError("Erro eo enviar a proposta.", [], 500);
+            return $this->antecipaGov->reponseError("Erro eo enviar a proposta.", $response, 500);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -160,25 +160,17 @@ class AntecipaGovController extends Controller
             }
         }
 
-        return $this->antecipaGov->reponseError("Erro eo consultar a proposta.", [], 500);
+        return $this->antecipaGov->reponseError("Erro eo consultar a proposta.", $response, 500);
     }
 
     public function consultExternalProposals(Request $request)
     {
-        $code = $request->input('code');
-
-        if (empty($code)) {
-            return $this->antecipaGov->reponseError("Código inválido ou não enviado");
-        }
-
-        $proposal = Proposal::whereCode($code)->first();
-
-        if (empty($proposal)) {
-            return $this->antecipaGov->reponseError("Nenhuma proposta encontrada com o código " . $code);
+        if (empty($request->input('external_proposal_id'))) {
+            return $this->antecipaGov->reponseError("ID da cotação inválido ou não enviado");
         }
 
         $data = [
-            'NumeroCotacao' => $proposal->external_proposal_id
+            'numeroCotacao' => $request->input('external_proposal_id')
         ];
 
         $response = $this->antecipaGov->makeRequestPortal("ConsultarCotacaoComProposta", $data, 'GET');
@@ -187,7 +179,7 @@ class AntecipaGovController extends Controller
             return $this->antecipaGov->reponseSuccess('Cotação consultada com sucesso!', $response['data']);
         }
 
-        return $this->antecipaGov->reponseError("Erro eo consultar a cotação.", [], 500);
+        return $this->antecipaGov->reponseError("Erro eo consultar a cotação.", $response, 500);
     }
 
     public function consultContracts(Request $request)
@@ -228,7 +220,7 @@ class AntecipaGovController extends Controller
             return $this->antecipaGov->reponseSuccess('Contratos consultados com sucesso!', $response['data']);
         }
 
-        return $this->antecipaGov->reponseError("Erro eo consultar os contratos.", [], 500);
+        return $this->antecipaGov->reponseError("Erro eo consultar os contratos.", $response, 500);
     }
 
 
@@ -258,24 +250,23 @@ class AntecipaGovController extends Controller
         }
 
         $data = [
-            "cnpjInstituicaoFinanceira" => "40050004000107",
-            "cnpjInstituicaoFinanceiraConta" => "40050004000107",
-            "cnpjInstituicaoPlataforma" => "40050004000107",
-            "dataAtualizacao" => Carbon::now(),
-            "idOperacaoCredito" => $request->input('operation_id'),
             "niFornecedor" => $proposal->account->document,
-            "saldoDevedorAtualizado" => $request->input('amount'),
-            "codigoInstituicaoContaVinculada" => "40050004000107",
+            "saldoDevedorAtualizado" => $proposal->amount,
+            "cnpjInstituicaoFinanceira" => "00000000000001",
+            "cnpjInstituicaoFinanceiraConta" => "00000000000001",
+            "cnpjInstituicaoPlataforma" => "00000000000002",
+            "codigoInstituicaoContaVinculada" => "11111",
+            "nrAgenciaContaVinculada" => "9999",
+            "nrContaVinculada" => "12345-6",
+            "numeroInstrumento" => "INST-01",
+            "dataAtualizacao" => Carbon::now()->format('Y-m-d H:i'),
             "contratos" => $contracts,
-            "dataCelebracaoOperacao" => "yyyy-MM-dd",
-            "dataFinalReal" => "2021-12-30",
-            "dataFinalVigencia" => "yyyy-MM-dd",
-            "dataInicialVigencia" => "yyyy-MM-dd",
-            "idPedidoPortal" => "string",
-            "nrAgenciaContaVinculada" => "string",
-            "nrContaVinculada" => "string",
-            "numeroInstrumento" => "string",
-            "valorOperacao" => 0
+            "dataCelebracaoOperacao" => Carbon::now()->format('Y-m-d'),
+            "dataFinalReal" => Carbon::now()->format('Y-m-d'),
+            "dataFinalVigencia" => Carbon::now()->format('Y-m-d'),
+            "dataInicialVigencia" => Carbon::now()->format('Y-m-d'),
+            "idPedidoPortal" => $proposal->external_proposal_id,
+            "valorOperacao" => $proposal->amount
         ];
 
         return $this->antecipaGov->makeRequestPilar("operacoes/registro", $data, 'GET');
