@@ -21,7 +21,6 @@ class AccountController extends Controller
                 'message' => 'Account created successfully!',
                 'data' => $account->toArray()
             ]);
-
         } catch (Exception $e) {
 
             DB::rollBack();

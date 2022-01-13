@@ -114,7 +114,6 @@ class AntecipaGovController extends Controller
             }
 
             return $this->antecipaGov->reponseError("Erro eo enviar a proposta.", $response, 500);
-
         } catch (Exception $e) {
             DB::rollBack();
             return $this->antecipaGov->reponseError($e->getMessage());
@@ -153,7 +152,6 @@ class AntecipaGovController extends Controller
                 DB::commit();
 
                 return $this->antecipaGov->reponseSuccess('Proposta consultada com sucesso!', $proposal->toArray());
-
             } catch (Exception $e) {
                 DB::rollBack();
                 return $this->antecipaGov->reponseError($e->getMessage());
